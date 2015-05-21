@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+
+if [ -z "$1" -o "$1" != "connect" -a "$1" != "disconnect" -a "$1" != "disconnectall"  ]
+then
+	echo "$0 connect|disconnect|disconnectall [username] [password]"
+	exit -1
+fi
+action=$1
+
+if [ -z "$2" -a "$1" != "disconnect" ]
+then
+	read -p "Username: " username
+else
+	username=$2
+fi
+
+if [ -z "$3" -a "$1" != "disconnect" ]
+then
+	read -s -p "Password: " password
+	echo
+else
+	password=$3
+fi
+
+curl -s "https://its.pku.edu.cn:5428/ipgatewayofpku?uid=$username&password=$password&range=1&operation=$action&timeout=1" |
+iconv -f GB18030 -t UTF-8 |
+grep 'IPGWCLIENT_START' |
+awk '{
+	for (i = 2; i < NF; i++) {
+		split($i, a, "=");
+		printf("%*s = %s\n", 12, a[1], a[2]);
+	}
+}'
